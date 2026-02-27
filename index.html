@@ -480,7 +480,7 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhYXlmdmZqcnhscXVqZmRvYnpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxNTMxOTQsImV4cCI6MjA4NzcyOTE5NH0.hOhB_bqcKFf7oMiJhODrQPUe-CPU8UDDLER9dzsqdDg';
   // ============================================================
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   let currentImageFile = null;
 
@@ -513,7 +513,7 @@
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
 
-    const { data, error } = await supabase.storage
+    const { data, error } = await db.storage
       .from('post-images')
       .upload(fileName, file);
 
@@ -522,7 +522,7 @@
       return null;
     }
 
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = db.storage
       .from('post-images')
       .getPublicUrl(fileName);
 
@@ -557,7 +557,7 @@
         imageUrl = await uploadImage(currentImageFile);
       }
 
-      const { error } = await supabase.from('posts').insert({
+      const { error } = await db.from('posts').insert({
         name: document.getElementById('name').value.trim(),
         email: email,
         instagram: instagram || null,
