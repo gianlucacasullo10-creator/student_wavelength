@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Wavelength — Connect with likeminded students</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0C0C0C;
+    --surface: #161616;
+    --surface-hover: #1e1e1e;
+    --border: #2a2a2a;
+    --text: #e8e8e8;
+    --text-muted: #888;
+    --accent: #a78bfa;
+    --accent-dim: #9373f0;
+    --radius: 12px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.6rem;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .header-tag {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: var(--surface);
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .hero {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 80px 24px 60px;
+    text-align: center;
+  }
+
+  .hero h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    font-weight: 400;
+    line-height: 1.15;
+    margin-bottom: 20px;
+    letter-spacing: -1px;
+  }
+
+  .hero h1 em { color: var(--accent); font-style: italic; }
+
+  .hero p {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    max-width: 480px;
+    margin: 0 auto 40px;
+    line-height: 1.7;
+  }
+
+  .form-section {
+    max-width: 580px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+  }
+
+  .form-card h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin-bottom: 6px;
+  }
+
+  .form-card .subtitle {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 28px;
+  }
+
+  .field { margin-bottom: 20px; }
+
+  .field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .field input, .field textarea, .field select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .field input:focus, .field textarea:focus, .field select:focus {
+    border-color: var(--accent);
+  }
+
+  .field textarea { resize: vertical; min-height: 100px; }
+  .field select option { background: var(--bg); color: var(--text); }
+
+  .socials-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .social-field input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .social-field input:focus { border-color: var(--accent); }
+
+  .social-field label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+
+  .upload-area:hover {
+    border-color: var(--accent);
+    background: rgba(167, 139, 250, 0.03);
+  }
+
+  .upload-area.has-file { border-color: var(--accent); border-style: solid; }
+
+  .upload-area input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .upload-icon { font-size: 1.5rem; margin-bottom: 8px; }
+  .upload-text { color: var(--text-muted); font-size: 0.85rem; }
+  .upload-text span { color: var(--accent); font-weight: 500; }
+
+  .file-name {
+    color: var(--accent);
+    font-size: 0.85rem;
+    margin-top: 6px;
+    word-break: break-all;
+  }
+
+  .image-preview {
+    margin-top: 12px;
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 6px;
+    object-fit: cover;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 8px;
+  }
+
+  .submit-btn:hover { background: var(--accent-dim); }
+  .submit-btn:active { transform: scale(0.98); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .divider {
+    max-width: 580px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 60px;
+  }
+
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .divider span {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  .feed-section {
+    max-width: 580px;
+    margin: 0 auto;
+    padding: 0 24px 100px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .empty-state .empty-icon { font-size: 2rem; margin-bottom: 12px; opacity: 0.4; }
+
+  .loading-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .post-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+    animation: fadeUp 0.35s ease-out;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .post-card:hover { border-color: #3a3a3a; }
+
+  .post-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .post-name { font-weight: 700; font-size: 1rem; }
+
+  .post-tag {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .tag-cofounder { background: rgba(167, 139, 250, 0.15); color: var(--accent); }
+  .tag-developer { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+  .tag-study { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+  .tag-creative { background: rgba(244, 114, 182, 0.15); color: #f472b6; }
+  .tag-other { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+
+  .post-project { font-family: 'Instrument Serif', serif; font-size: 1.2rem; margin-bottom: 8px; }
+
+  .post-description {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+
+  .post-image {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    max-height: 300px;
+    object-fit: cover;
+  }
+
+  .post-socials { display: flex; gap: 16px; font-size: 0.85rem; }
+
+  .post-socials .social-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .post-socials .social-link:hover { color: var(--accent); }
+  .post-socials .social-label { color: #555; margin-right: 4px; }
+  .post-time { font-size: 0.75rem; color: #555; margin-top: 10px; }
+
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--accent);
+    color: var(--bg);
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: all 0.35s ease;
+    z-index: 999;
+    pointer-events: none;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: #e8443a; color: white; }
+
+  @media (max-width: 500px) {
+    .form-card { padding: 24px 20px; }
+    .post-card { padding: 20px; }
+    .hero { padding: 60px 20px 40px; }
+    .socials-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">student wavelength</div>
+  <div class="header-tag">Brock University</div>
+</header>
+
+<section class="hero">
+  <h1>Connect with <em>likeminded</em> people at Brock.</h1>
+  <p>See what students around you are actually working on — and find the ones you vibe with.</p>
+</section>
+
+<section class="form-section">
+  <div class="form-card">
+    <h2>Post your project</h2>
+    <p class="subtitle">What are you working on and what do you need?</p>
+
+    <form id="postForm">
+      <div class="field">
+        <label>Your Name</label>
+        <input type="text" id="name" placeholder="First name or alias" required>
+      </div>
+
+      <div class="field">
+        <label>School Email</label>
+        <input type="email" id="email" placeholder="you@brocku.ca" required>
+      </div>
+
+      <div class="field">
+        <label>How to reach you (at least one)</label>
+        <div class="socials-row">
+          <div class="social-field">
+            <label>Instagram</label>
+            <input type="text" id="instagram" placeholder="@yourhandle">
+          </div>
+          <div class="social-field">
+            <label>Snapchat</label>
+            <input type="text" id="snapchat" placeholder="@yoursnap">
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Project / Idea Name</label>
+        <input type="text" id="project" placeholder="What are you working on?" required>
+      </div>
+
+      <div class="field">
+        <label>What do you need?</label>
+        <select id="category" required>
+          <option value="" disabled selected>Select one</option>
+          <option value="cofounder">Co-founder</option>
+          <option value="developer">Developer / Technical Help</option>
+          <option value="study">Study / Accountability Partner</option>
+          <option value="creative">Designer / Creative</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Tell us more</label>
+        <textarea id="description" placeholder="What's the project about? What kind of person are you looking for? What stage are you at?" required></textarea>
+      </div>
+
+      <div class="field">
+        <label>Image (optional)</label>
+        <div class="upload-area" id="uploadArea">
+          <input type="file" id="imageInput" accept="image/*">
+          <div class="upload-icon">↑</div>
+          <div class="upload-text"><span>Click to upload</span> or drag a screenshot, mockup, etc.</div>
+          <div class="file-name" id="fileName"></div>
+          <img class="image-preview" id="imagePreview" style="display:none;">
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">Post it →</button>
+    </form>
+  </div>
+</section>
+
+<div class="divider"><span>What people are building</span></div>
+
+<section class="feed-section" id="feed">
+  <div class="loading-state" id="loadingState">Loading posts...</div>
+  <div class="empty-state" id="emptyState" style="display:none;">
+    <div class="empty-icon">◇</div>
+    <p>No posts yet. Be the first to share what you're building.</p>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ============================================================
+  //  SUPABASE CONFIG — Replace these with your project values
+  //  You'll find them in: Supabase Dashboard > Settings > API
+  // ============================================================
+  const SUPABASE_URL = 'https://saayfvfjrxlqujfdobzl.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhYXlmdmZqcnhscXVqZmRvYnpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxNTMxOTQsImV4cCI6MjA4NzcyOTE5NH0.hOhB_bqcKFf7oMiJhODrQPUe-CPU8UDDLER9dzsqdDg';
+  // ============================================================
+
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let currentImageFile = null;
+
+  // --- Image Upload Preview ---
+  const imageInput = document.getElementById('imageInput');
+  const uploadArea = document.getElementById('uploadArea');
+  const fileNameEl = document.getElementById('fileName');
+  const imagePreview = document.getElementById('imagePreview');
+
+  imageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image must be under 5MB', true);
+      return;
+    }
+    currentImageFile = file;
+    fileNameEl.textContent = file.name;
+    uploadArea.classList.add('has-file');
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      imagePreview.src = ev.target.result;
+      imagePreview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // --- Upload image to Supabase Storage ---
+  async function uploadImage(file) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
+
+    const { data, error } = await supabase.storage
+      .from('post-images')
+      .upload(fileName, file);
+
+    if (error) {
+      console.error('Image upload error:', error);
+      return null;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('post-images')
+      .getPublicUrl(fileName);
+
+    return urlData.publicUrl;
+  }
+
+  // --- Form Submit ---
+  document.getElementById('postForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+
+    const email = document.getElementById('email').value.trim();
+    const instagram = document.getElementById('instagram').value.trim();
+    const snapchat = document.getElementById('snapchat').value.trim();
+
+    if (!email.endsWith('@brocku.ca')) {
+      showToast('Please use your @brocku.ca email', true);
+      return;
+    }
+
+    if (!instagram && !snapchat) {
+      showToast('Add at least one handle so people can reach you', true);
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Posting...';
+
+    try {
+      let imageUrl = null;
+      if (currentImageFile) {
+        imageUrl = await uploadImage(currentImageFile);
+      }
+
+      const { error } = await supabase.from('posts').insert({
+        name: document.getElementById('name').value.trim(),
+        email: email,
+        instagram: instagram || null,
+        snapchat: snapchat || null,
+        project: document.getElementById('project').value.trim(),
+        category: document.getElementById('category').value,
+        description: document.getElementById('description').value.trim(),
+        image_url: imageUrl,
+      });
+
+      if (error) throw error;
+
+      e.target.reset();
+      currentImageFile = null;
+      fileNameEl.textContent = '';
+      imagePreview.style.display = 'none';
+      uploadArea.classList.remove('has-file');
+
+      showToast('Posted successfully ✓');
+      loadPosts();
+
+    } catch (err) {
+      console.error('Submit error:', err);
+      showToast('Something went wrong — try again', true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Post it →';
+    }
+  });
+
+  // --- Load Posts ---
+  async function loadPosts() {
+    const feed = document.getElementById('feed');
+    const loading = document.getElementById('loadingState');
+    const empty = document.getElementById('emptyState');
+
+    try {
+      const { data: posts, error } = await supabase
+        .from('posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      loading.style.display = 'none';
+      feed.querySelectorAll('.post-card').forEach(c => c.remove());
+
+      if (!posts || posts.length === 0) {
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+
+      const tagClasses = {
+        cofounder: 'tag-cofounder',
+        developer: 'tag-developer',
+        study: 'tag-study',
+        creative: 'tag-creative',
+        other: 'tag-other'
+      };
+
+      const tagLabels = {
+        cofounder: 'Co-founder',
+        developer: 'Developer',
+        study: 'Study Partner',
+        creative: 'Creative',
+        other: 'Other'
+      };
+
+      posts.forEach(post => {
+        const card = document.createElement('div');
+        card.className = 'post-card';
+        const timeAgo = getTimeAgo(new Date(post.created_at));
+
+        let socialsHTML = '';
+        if (post.instagram) {
+          socialsHTML += `<a class="social-link" href="https://instagram.com/${post.instagram.replace('@', '')}" target="_blank"><span class="social-label">IG</span> ${escapeHTML(post.instagram)}</a>`;
+        }
+        if (post.snapchat) {
+          socialsHTML += `<a class="social-link" href="https://snapchat.com/add/${post.snapchat.replace('@', '')}" target="_blank"><span class="social-label">Snap</span> ${escapeHTML(post.snapchat)}</a>`;
+        }
+
+        card.innerHTML = `
+          <div class="post-header">
+            <div class="post-name">${escapeHTML(post.name)}</div>
+            <div class="post-tag ${tagClasses[post.category] || 'tag-other'}">${tagLabels[post.category] || 'Other'}</div>
+          </div>
+          <div class="post-project">${escapeHTML(post.project)}</div>
+          <div class="post-description">${escapeHTML(post.description)}</div>
+          ${post.image_url ? `<img class="post-image" src="${post.image_url}" alt="Project image">` : ''}
+          <div class="post-socials">${socialsHTML}</div>
+          <div class="post-time">${timeAgo}</div>
+        `;
+        feed.appendChild(card);
+      });
+
+    } catch (err) {
+      console.error('Load error:', err);
+      loading.textContent = 'Failed to load posts — refresh to try again.';
+    }
+  }
+
+  // --- Helpers ---
+  function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function getTimeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+    if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+    return Math.floor(seconds / 86400) + 'd ago';
+  }
+
+  function showToast(message, isError = false) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = isError ? 'toast error show' : 'toast show';
+    setTimeout(() => { toast.className = toast.className.replace(' show', ''); }, 2500);
+  }
+
+  // --- Init ---
+  loadPosts();
+</script>
+
+</body>
+</html>
