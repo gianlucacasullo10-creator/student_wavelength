@@ -595,7 +595,7 @@
     const empty = document.getElementById('emptyState');
 
     try {
-      const { data: posts, error } = await supabase
+      const { data: posts, error } = await db
         .from('posts')
         .select('*')
         .order('created_at', { ascending: false });
